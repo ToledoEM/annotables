@@ -5,7 +5,7 @@
 \alias{rnor6}
 \title{Rat annotation data}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 31048 rows and 9 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 57961 rows and 9 columns.
 }
 \source{
 \url{http://ensembl.org/rattus_norvegicus}
