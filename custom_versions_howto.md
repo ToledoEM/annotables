@@ -1,4 +1,4 @@
-# How to Recreate This Repository: Step-by-Step Guide
+# How to Recreate This Repository and Add a New Genome: Step-by-Step Guide
 
 This guide explains how to fully regenerate the data and documentation for this repository from scratch, ensuring reproducibility and transparency.
 
@@ -70,6 +70,44 @@ devtools::install()
 library(annotables)
 ls("package:annotables")
 ```
+
+## 7. Adding a New Species (Creating a YAML Recipe)
+
+To add a new species, create a YAML recipe file in `data-raw/recipes/` with the following structure:
+
+```yaml
+name: Common Name
+species: Scientific name
+host: https://useast.ensembl.org
+biomart: ENSEMBL_MART_ENSEMBL
+dataset: <ensembl_dataset_name>
+attributes:
+  ensgene: ensembl_gene_id
+  entrez: entrezgene_id
+  symbol: external_gene_name
+  chr: chromosome_name
+  start: start_position
+  end: end_position
+  strand: strand
+  biotype: gene_biotype
+  description: description
+```
+
+- **name**: Common name of the species (e.g., Pig)
+- **species**: Scientific name (e.g., Sus scrofa)
+- **host**: Ensembl host URL (usually `https://useast.ensembl.org`)
+- **biomart**: Always `ENSEMBL_MART_ENSEMBL`
+- **dataset**: The Ensembl dataset name (e.g., `sscrofa_gene_ensembl`). Find this using `listDatasets()` in R:
+  ```r
+  library(biomaRt)
+  mart <- useMart("ENSEMBL_MART_ENSEMBL", host = "https://useast.ensembl.org")
+  listDatasets(mart)
+  ```
+- **attributes**: Mapping of output column names to Ensembl attribute names.
+
+Save the file as `<species>.yml` (e.g., `sscrofa.yml`) in `data-raw/recipes/`.
+
+After adding the YAML, rerun the build steps above to generate the new data and documentation.
 
 ## Notes and Troubleshooting
 
