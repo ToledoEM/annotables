@@ -1,8 +1,8 @@
-name: Roundworm
-species: Caenorhabditis elegans
+name: Zebrafish
+species: Danio rerio
 host: https://jun2026.archive.ensembl.org
 biomart: ENSEMBL_MART_ENSEMBL
-dataset: celegans_gene_ensembl
+dataset: drerio_gene_ensembl
 attributes:
   ensgene: ensembl_gene_id
   entrez: entrezgene_id
