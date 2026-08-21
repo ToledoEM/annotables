@@ -27,16 +27,62 @@ devtools::install_github("stephenturner/annotables")
 
 Many bioinformatics tasks require converting gene identifiers from one convention to another, or annotating gene identifiers with gene symbol, description, position, etc. Sure, [biomaRt](https://bioconductor.org/packages/release/bioc/html/biomaRt.html) does this for you, but I got tired of remembering biomaRt syntax and hammering Ensembl's servers every time I needed to do this.
 
-This package has basic annotation information from **`r ensembl_version`** for:
+This package has basic annotation information from **`r ensembl_version`** for the
+species below. Gene counts are computed from the bundled tables; assemblies,
+accessions, release dates and taxonomy IDs come from the [Ensembl REST
+API](https://rest.ensembl.org).
 
--   Human build 38 (`grch38`)
--   Human build 37 (`grch37`)
--   Mouse (`grcm38`)
--   Rat (`rnor6`)
--   Chicken (`galgal5`)
--   Worm (`wbcel235`)
--   Fly (`bdgp6`)
--   Macaque (`mmul801`)
+```{r species_table, echo=FALSE, results='asis', message=FALSE}
+library(dplyr)
+
+# Assembly metadata for the assemblies these tables were built against.
+# Retrieved from rest.ensembl.org (info/assembly, info/species, info/genomes).
+meta <- tibble::tribble(
+    ~dataset,      ~species,    ~taxon, ~assembly,            ~accession,         ~released,
+    "grch38",      "Human",     9606L,  "GRCh38",             "GCA_000001405.29", "2013-12",
+    "grch37",      "Human",     9606L,  "GRCh37",             "GCA_000001405.14", "2009-02",
+    "grcm38",      "Mouse",     10090L, "GRCm38",             "GCA_000001635.8",  "2012-01",
+    "rnor6",       "Rat",       10116L, "Rnor_6.0",           "GCA_000001895.4",  "2014-07",
+    "galgal5",     "Chicken",   9031L,  "Gallus_gallus-5.0",  "GCA_000002315.3",  "2015-12",
+    "wbcel235",    "Worm",      6239L,  "WBcel235",           "GCA_000002985.3",  "2012-12",
+    "bdgp6",       "Fly",       7227L,  "BDGP6",              "GCA_000001215.4",  NA_character_,
+    "drerio",      "Zebrafish", 7955L,  "GRCz11",             "GCA_000002035.4",  "2017-05",
+    "mmul801",     "Macaque",   9544L,  "Mmul_8.0.1",         "GCA_000772875.3",  "2015-11",
+    "cfamiliaris", "Dog",       9615L,  "CanFam3.1",          "GCA_000002285.2",  "2011-11",
+    "sscrofa",     "Pig",       9823L,  "Sscrofa11.1",        "GCA_000003025.6",  "2017-02"
+)
+
+counts <- lapply(meta$dataset, function(n) {
+    d <- get(n)
+    tibble::tibble(
+        dataset   = n,
+        genes     = nrow(d),
+        coding    = sum(d$biotype == "protein_coding", na.rm = TRUE),
+        noncoding = sum(d$biotype != "protein_coding", na.rm = TRUE),
+        tx2gene   = nrow(get(paste0(n, "_tx2gene")))
+    )
+}) %>% bind_rows()
+
+meta %>%
+    inner_join(counts, by = "dataset") %>%
+    mutate(
+        dataset  = paste0("`", dataset, "`"),
+        released = ifelse(is.na(released), "—", released),
+        across(c(genes, coding, noncoding, tx2gene), ~ format(.x, big.mark = ","))
+    ) %>%
+    knitr::kable(
+        col.names = c("Dataset", "Species", "Taxon", "Assembly", "Accession",
+                      "Assembly released", "Genes", "Coding", "Non-coding", "tx2gene"),
+        align = "llrlllrrrr"
+    )
+```
+
+Coding versus non-coding is `biotype == "protein_coding"` against everything
+else; totals count gene rows, not unique symbols.
+
+Note several of these assemblies have been superseded upstream (Ensembl 116
+serves GRCm39, GRCr8, GRCg7b, ROS_Cfam_1.0 and Mmul_10). The dataset names
+encode the assembly they were built from — see `NEWS.md` for the full mapping.
 
 Where each table contains:
 
@@ -80,7 +126,7 @@ grch38 %>%
     knitr::kable(.)
 ```
 
-Example with [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) results from the [airway](https://bioconductor.org/packages/release/data/experiment/html/airway.html) package, made tidy with [biobroom](http://www.bioconductor.org/packages/devel/bioc/html/biobroom.html):
+Example with [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) results from the [airway](https://bioconductor.org/packages/release/data/experiment/html/airway.html) package:
 
 ```{r}
 library(DESeq2)
@@ -91,9 +137,16 @@ airway <- DESeqDataSet(airway, design = ~cell + dex)
 airway <- DESeq(airway)
 res <- results(airway)
 
-# tidy results with biobroom
-library(biobroom)
-res_tidy <- tidy.DESeqResults(res)
+# tidy the results
+res_tidy <- res %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column("gene") %>%
+    tibble::as_tibble() %>%
+    dplyr::rename(estimate = log2FoldChange,
+                  stderror = lfcSE,
+                  statistic = stat,
+                  p.value = pvalue,
+                  p.adjusted = padj)
 head(res_tidy)
 ```
 

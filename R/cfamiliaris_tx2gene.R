@@ -1,7 +1,20 @@
-#' Dog transcript-to-gene table
+#' Dog transcripts to genes
 #'
-#' Transcript-to-gene mapping for Canis lupus familiaris (dog) from Ensembl.
+#' Lookup table for converting Dog (*Canis lupus familiaris*)
+#' Ensembl transcript IDs to gene IDs based on genome assembly
+#' CFAMILIARIS from Ensembl.
 #'
-#' @format A data frame with transcript and gene columns.
-#' @source Ensembl
+#' @docType data
+#' @keywords datasets
+#'
+#' @details
+#' Variables:
+#' 
+#' - enstxp
+#' - ensgene
+#'
+#' @source \url{http://ensembl.org/canis_lupus familiaris}
+#'
+#' @examples
+#' head(cfamiliaris_tx2gene)
 "cfamiliaris_tx2gene"

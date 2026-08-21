@@ -1,7 +1,20 @@
-#' Zebrafish transcript-to-gene table
+#' Zebrafish transcripts to genes
 #'
-#' Transcript-to-gene mapping for Danio rerio (zebrafish) from Ensembl.
+#' Lookup table for converting Zebrafish (*Danio rerio*)
+#' Ensembl transcript IDs to gene IDs based on genome assembly
+#' DRERIO from Ensembl.
 #'
-#' @format A data frame with transcript and gene columns.
-#' @source Ensembl
+#' @docType data
+#' @keywords datasets
+#'
+#' @details
+#' Variables:
+#' 
+#' - enstxp
+#' - ensgene
+#'
+#' @source \url{http://ensembl.org/danio_rerio}
+#'
+#' @examples
+#' head(drerio_tx2gene)
 "drerio_tx2gene"

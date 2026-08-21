@@ -1,9 +1,10 @@
-#' Zebrafish gene annotation table
+#' Zebrafish annotation data
 #'
-#' Gene annotation table for Danio rerio (zebrafish) from Ensembl.
+#' Zebrafish (*Danio rerio*) annotations based on
+#' genome assembly DRERIO from Ensembl.
 #'
-#' @format A data frame with gene annotation columns.
-#' @source Ensembl
+#' @docType data
+#' @keywords datasets
 #'
 #' @details
 #' Variables:

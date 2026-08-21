@@ -21,20 +21,32 @@ description, position, etc. Sure,
 does this for you, but I got tired of remembering biomaRt syntax and
 hammering Ensembl’s servers every time I needed to do this.
 
-This package has basic annotation information from **Ensembl Genes 114**
-for:
+This package has basic annotation information from **Ensembl Genes 116**
+for the species below. Gene counts are computed from the bundled tables;
+assemblies, accessions, release dates and taxonomy IDs come from the
+[Ensembl REST API](https://rest.ensembl.org).
 
-- Human build 38 (`grch38`)
-- Human build 37 (`grch37`)
-- Mouse (`grcm38`)
-- Rat (`rnor6`)
-- Chicken (`galgal5`)
-- Worm (`wbcel235`)
-- Fly (`bdgp6`)
-- Macaque (`mmul801`)
-- Pig (`Sscrofa11.1`)
-- Dog (`ROS_Cfam_1.0`)
-- Zebrafish (`GRCz11`)
+| Dataset | Species | Taxon | Assembly | Accession | Assembly released | Genes | Coding | Non-coding | tx2gene |
+|:---|:---|---:|:---|:---|:---|---:|---:|---:|---:|
+| `grch38` | Human | 9606 | GRCh38 | GCA_000001405.29 | 2013-12 | 91,743 | 24,105 | 67,638 | 670,670 |
+| `grch37` | Human | 9606 | GRCh37 | GCA_000001405.14 | 2009-02 | 66,978 | 25,166 | 41,812 | 215,170 |
+| `grcm38` | Mouse | 10090 | GRCm38 | GCA_000001635.8 | 2012-01 | 78,718 | 22,087 | 56,631 | 481,956 |
+| `rnor6` | Rat | 10116 | Rnor_6.0 | GCA_000001895.4 | 2014-07 | 57,760 | 22,384 | 35,376 | 95,472 |
+| `galgal5` | Chicken | 9031 | Gallus_gallus-5.0 | GCA_000002315.3 | 2015-12 | 34,332 | 18,464 | 15,868 | 72,689 |
+| `wbcel235` | Worm | 6239 | WBcel235 | GCA_000002985.3 | 2012-12 | 46,926 | 19,985 | 26,941 | 60,000 |
+| `bdgp6` | Fly | 7227 | BDGP6 | GCA_000001215.4 | — | 28,759 | 18,484 | 10,275 | 41,600 |
+| `drerio` | Zebrafish | 7955 | GRCz11 | GCA_000002035.4 | 2017-05 | 92,137 | 34,779 | 57,358 | 65,905 |
+| `mmul801` | Macaque | 9544 | Mmul_8.0.1 | GCA_000772875.3 | 2015-11 | 37,169 | 22,236 | 14,933 | 64,228 |
+| `cfamiliaris` | Dog | 9615 | CanFam3.1 | GCA_000002285.2 | 2011-11 | 34,012 | 21,501 | 12,511 | 55,335 |
+| `sscrofa` | Pig | 9823 | Sscrofa11.1 | GCA_000003025.6 | 2017-02 | 35,819 | 22,150 | 13,669 | 60,440 |
+
+Coding versus non-coding is `biotype == "protein_coding"` against
+everything else; totals count gene rows, not unique symbols.
+
+Note several of these assemblies have been superseded upstream (Ensembl
+116 serves GRCm39, GRCr8, GRCg7b, ROS_Cfam_1.0 and Mmul_10). The dataset
+names encode the assembly they were built from — see `NEWS.md` for the
+full mapping.
 
 Where each table contains:
 
@@ -64,7 +76,7 @@ because the table becomes too wide to print nicely):
 grch38
 ```
 
-    ## # A tibble: 91,673 × 9
+    ## # A tibble: 91,743 × 9
     ##    ensgene         entrez symbol chr     start    end strand biotype description
     ##    <chr>            <int> <chr>  <chr>   <int>  <int>  <int> <chr>   <chr>      
     ##  1 ENSG00000000003   7105 TSPAN6 X      1.01e8 1.01e8     -1 protei… tetraspani…
@@ -77,7 +89,7 @@ grch38
     ##  8 ENSG00000001036   2519 FUCA2  6      1.43e8 1.44e8     -1 protei… alpha-L-fu…
     ##  9 ENSG00000001084   2729 GCLC   6      5.35e7 5.36e7     -1 protei… glutamate-…
     ## 10 ENSG00000001167   4800 NFYA   6      4.11e7 4.11e7      1 protei… nuclear tr…
-    ## # ℹ 91,663 more rows
+    ## # ℹ 91,733 more rows
 
 Look at the human genes-to-transcripts table:
 
@@ -85,20 +97,20 @@ Look at the human genes-to-transcripts table:
 grch38_tx2gene
 ```
 
-    ## # A tibble: 412,044 × 2
+    ## # A tibble: 670,670 × 2
     ##    enstxp          ensgene        
     ##    <chr>           <chr>          
     ##  1 ENST00000373020 ENSG00000000003
     ##  2 ENST00000612152 ENSG00000000003
     ##  3 ENST00000496771 ENSG00000000003
     ##  4 ENST00000494424 ENSG00000000003
-    ##  5 ENST00000373031 ENSG00000000005
-    ##  6 ENST00000485971 ENSG00000000005
-    ##  7 ENST00000466152 ENSG00000000419
-    ##  8 ENST00000371582 ENSG00000000419
-    ##  9 ENST00000683048 ENSG00000000419
-    ## 10 ENST00000371588 ENSG00000000419
-    ## # ℹ 412,034 more rows
+    ##  5 ENST00000867886 ENSG00000000003
+    ##  6 ENST00000867887 ENSG00000000003
+    ##  7 ENST00000867888 ENSG00000000003
+    ##  8 ENST00000867889 ENSG00000000003
+    ##  9 ENST00000867890 ENSG00000000003
+    ## 10 ENST00000867891 ENSG00000000003
+    ## # ℹ 670,660 more rows
 
 Tables are saved in [tibble](http://tibble.tidyverse.org) format,
 pipe-able with [dplyr](http://dplyr.tidyverse.org):
@@ -113,196 +125,38 @@ grch38 %>%
 
 | ensgene | symbol | chr | start | end | description |
 |:---|:---|:---|---:|---:|:---|
-| ENSG00000000457 | SCYL3 | 1 | 169849631 | 169894267 | SCY1 like pseudokinase 3 |
-| ENSG00000000460 | FIRRM | 1 | 169662007 | 169854080 | FIGNL1 interacting regulator of recombination and mitosis |
-| ENSG00000000938 | FGR | 1 | 27612064 | 27635185 | FGR proto-oncogene, Src family tyrosine kinase |
-| ENSG00000000971 | CFH | 1 | 196651754 | 196752476 | complement factor H |
-| ENSG00000001460 | STPG1 | 1 | 24356999 | 24416934 | sperm tail PG-rich repeat containing 1 |
-| ENSG00000001461 | NIPAL3 | 1 | 24415802 | 24476735 | NIPA like domain containing 3 |
+| ENSG00000000457 | SCYL3 | 1 | 169816039 | 169894267 | SCY1 like pseudokinase 3 |
+| ENSG00000000460 | FIRRM | 1 | 169662007 | 169873258 | FIGNL1 interacting regulator of recombination and mitosis |
+| ENSG00000000938 | FGR | 1 | 27611388 | 27635565 | FGR proto-oncogene, Src family tyrosine kinase |
+| ENSG00000000971 | CFH | 1 | 196651754 | 196753075 | complement factor H |
+| ENSG00000001460 | STPG1 | 1 | 24355830 | 24416934 | sperm tail PG-rich repeat containing 1 |
+| ENSG00000001461 | NIPAL3 | 1 | 24413515 | 24476735 | NIPA like domain containing 3 |
 
 Example with
 [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html)
 results from the
 [airway](https://bioconductor.org/packages/release/data/experiment/html/airway.html)
-package, made tidy with
-[biobroom](http://www.bioconductor.org/packages/devel/bioc/html/biobroom.html):
+package:
 
 ``` r
 library(DESeq2)
-```
-
-    ## Loading required package: S4Vectors
-
-    ## Loading required package: stats4
-
-    ## Loading required package: BiocGenerics
-
-    ## Loading required package: generics
-
-    ## 
-    ## Attaching package: 'generics'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     explain
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-    ##     setequal, union
-
-    ## 
-    ## Attaching package: 'BiocGenerics'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     combine
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     IQR, mad, sd, var, xtabs
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     anyDuplicated, aperm, append, as.data.frame, basename, cbind,
-    ##     colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
-    ##     get, grep, grepl, is.unsorted, lapply, Map, mapply, match, mget,
-    ##     order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
-    ##     rbind, Reduce, rownames, sapply, saveRDS, table, tapply, unique,
-    ##     unsplit, which.max, which.min
-
-    ## 
-    ## Attaching package: 'S4Vectors'
-
-    ## The following objects are masked from 'package:dplyr':
-    ## 
-    ##     first, rename
-
-    ## The following object is masked from 'package:utils':
-    ## 
-    ##     findMatches
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     expand.grid, I, unname
-
-    ## Loading required package: IRanges
-
-    ## 
-    ## Attaching package: 'IRanges'
-
-    ## The following objects are masked from 'package:dplyr':
-    ## 
-    ##     collapse, desc, slice
-
-    ## Loading required package: GenomicRanges
-
-    ## Loading required package: GenomeInfoDb
-
-    ## Loading required package: SummarizedExperiment
-
-    ## Loading required package: MatrixGenerics
-
-    ## Loading required package: matrixStats
-
-    ## 
-    ## Attaching package: 'matrixStats'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     count
-
-    ## 
-    ## Attaching package: 'MatrixGenerics'
-
-    ## The following objects are masked from 'package:matrixStats':
-    ## 
-    ##     colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
-    ##     colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
-    ##     colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
-    ##     colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
-    ##     colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
-    ##     colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
-    ##     colWeightedMeans, colWeightedMedians, colWeightedSds,
-    ##     colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
-    ##     rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
-    ##     rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
-    ##     rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
-    ##     rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
-    ##     rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
-    ##     rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
-    ##     rowWeightedSds, rowWeightedVars
-
-    ## Loading required package: Biobase
-
-    ## Welcome to Bioconductor
-    ## 
-    ##     Vignettes contain introductory material; view with
-    ##     'browseVignettes()'. To cite Bioconductor, see
-    ##     'citation("Biobase")', and for packages 'citation("pkgname")'.
-
-    ## 
-    ## Attaching package: 'Biobase'
-
-    ## The following object is masked from 'package:MatrixGenerics':
-    ## 
-    ##     rowMedians
-
-    ## The following objects are masked from 'package:matrixStats':
-    ## 
-    ##     anyMissing, rowMedians
-
-    ## The following object is masked from 'package:rlang':
-    ## 
-    ##     exprs
-
-``` r
 library(airway)
 
 data(airway)
 airway <- DESeqDataSet(airway, design = ~cell + dex)
 airway <- DESeq(airway)
-```
-
-    ## estimating size factors
-
-    ## estimating dispersions
-
-    ## gene-wise dispersion estimates
-
-    ## mean-dispersion relationship
-
-    ## final dispersion estimates
-
-    ## fitting model and testing
-
-``` r
 res <- results(airway)
 
-# tidy results with biobroom
-library(biobroom)
-```
-
-    ## Loading required package: broom
-
-    ## Registered S3 methods overwritten by 'biobroom':
-    ##   method      from 
-    ##   glance.list broom
-    ##   tidy.list   broom
-
-``` r
-res_tidy <- tidy.DESeqResults(res)
-```
-
-    ## Warning: `tbl_df()` was deprecated in dplyr 1.0.0.
-    ## ℹ Please use `tibble::as_tibble()` instead.
-    ## ℹ The deprecated feature was likely used in the biobroom package.
-    ##   Please report the issue at <https://github.com/StoreyLab/biobroom/issues>.
-    ## This warning is displayed once every 8 hours.
-    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-    ## generated.
-
-``` r
+# tidy the results
+res_tidy <- res %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column("gene") %>%
+    tibble::as_tibble() %>%
+    dplyr::rename(estimate = log2FoldChange,
+                  stderror = lfcSE,
+                  statistic = stat,
+                  p.value = pvalue,
+                  p.adjusted = padj)
 head(res_tidy)
 ```
 

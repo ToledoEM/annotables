@@ -1,9 +1,10 @@
-#' Dog gene annotation table
+#' Dog annotation data
 #'
-#' Gene annotation table for Canis lupus familiaris (dog) from Ensembl.
+#' Dog (*Canis lupus familiaris*) annotations based on
+#' genome assembly CFAMILIARIS from Ensembl.
 #'
-#' @format A data frame with gene annotation columns.
-#' @source Ensembl
+#' @docType data
+#' @keywords datasets
 #'
 #' @details
 #' Variables:
