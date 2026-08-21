@@ -1,6 +1,6 @@
 name: Zebrafish
 species: Danio rerio
-host: https://useast.ensembl.org
+host: https://jun2026.archive.ensembl.org
 biomart: ENSEMBL_MART_ENSEMBL
 dataset: drerio_gene_ensembl
 attributes:

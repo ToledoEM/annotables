@@ -18,11 +18,92 @@ devtools::load_all()
 ```
 
 ```{r functions}
+# Seconds to wait between Ensembl requests. Archive hosts are smaller than the
+# main site and degrade under back-to-back queries.
+ENSEMBL_DELAY <- 3
+
+# biomaRt passes getOption("timeout") to req_timeout(), and R's default is 60s.
+# A cold archive host can take ~50s just to return the registry, so the default
+# leaves almost no headroom and a slow response aborts as a gateway timeout.
+options(timeout = 600)
+
+# Retry a request on transient server-side failures. A 504 from the archive is
+# usually momentary, and without a retry one slow response kills a run that has
+# already spent many minutes downloading.
+#
+# The non-HTTP patterns are included deliberately. When the archive is briefly
+# overloaded it serves an HTML "Service unavailable" page with HTTP 200, and
+# biomaRt parses that page as if it were data. Depending on which request hit
+# the bad response, that surfaces as
+#   The given dataset: <name>, is not valid.          (dataset list)
+#   biomaRt error: looks like we're connecting to
+#     incompatible version of BioMart.                (attributes/filters)
+# Both look like configuration errors but are really outages: the same request
+# a few seconds later succeeds.
+with_retry <- function(expr, what, tries = 6) {
+    expr <- enquo(expr)
+    for (i in seq_len(tries)) {
+        result <- try(eval_tidy(expr), silent = TRUE)
+        if (!inherits(result, "try-error")) return(result)
+
+        msg <- conditionMessage(attr(result, "condition"))
+        transient <- grepl(paste("50[234]", "429", "timed? ?out", "Timeout",
+                                 "is not valid", "unavailable",
+                                 "incompatible version",
+                                 sep = "|"),
+                           msg, ignore.case = TRUE)
+        if (!transient || i == tries) stop(msg, call. = FALSE)
+
+        # Cap the backoff so a long run does not stall for many minutes on one
+        # dataset, but give the host well over a minute to recover.
+        wait <- min(ENSEMBL_DELAY * 2^i, 120)
+        message(sprintf("  %s failed (%s); retry %d/%d in %ds",
+                        what, trimws(msg), i, tries - 1, wait))
+        Sys.sleep(wait)
+    }
+}
+
+# The BioMart registry served by the archive advertises host="www.ensembl.org"
+# for every mart. useMart() follows that for its dataset-list request, and
+# www.ensembl.org 308-redirects BioMart to a GET-only endpoint: the redirect
+# returns an empty body, which biomaRt reports as
+#   "looks like we're connecting to incompatible version of BioMart"
+# and a POSTed query there returns 405. Patching mart@host after useMart()
+# returns is too late, because the bad request already happened inside it.
+#
+# Build the Mart object directly instead, so every request stays on the recipe's
+# host. Also caches one mart per host+dataset: useMart() would otherwise refetch
+# the same registry for all 11 recipes, twice over (genes and tx2gene).
+mart_cache <- new.env(parent = emptyenv())
+
+get_mart <- function(recipe) {
+    key <- paste(recipe$host, recipe$biomart, recipe$dataset)
+    if (!is.null(mart_cache[[key]])) return(mart_cache[[key]])
+
+    host <- paste0(sub("/$", "", recipe$host), ":443/biomart/martservice")
+
+    mart <- new("Mart",
+                biomart     = recipe$biomart,
+                host        = host,
+                vschema     = "default",
+                http_config = list())
+
+    # useDataset() fills in the attribute and filter metadata that getBM()
+    # needs, and because the host is already pinned every request it makes
+    # stays on the archive.
+    mart <- with_retry(useDataset(mart = mart, dataset = recipe$dataset),
+                       what = paste("useDataset", recipe$dataset))
+
+    mart_cache[[key]] <- mart
+    mart
+}
+
 get_data <- function(recipe) {
     message(recipe$dataset)
-    mart <- useMart(recipe$biomart, recipe$dataset, recipe$host)
+    mart <- get_mart(recipe)
     attr <- unlist(recipe$attributes, use.names = FALSE)
-    getBM(attr, mart = mart)
+    on.exit(Sys.sleep(ENSEMBL_DELAY), add = TRUE)
+    with_retry(getBM(attr, mart = mart), what = paste("getBM", recipe$dataset))
 }
 
 tidy_data <- function(df, recipe, tx = FALSE) {
@@ -42,50 +123,79 @@ save_data <- function(..., name) {
     objs <- setNames(list(...), name)
     save(list = name, file = path, envir = list2env(objs), compress = "xz")
 }
+
+# Progress log. The Ensembl archive is unreliable enough that a full build often
+# dies partway through, and without this every completed download is thrown away
+# on the next attempt. Each table is recorded here as soon as it is written to
+# data/, so a rerun skips it. The log is deleted once every table is present,
+# leaving no state behind after a clean build.
+PROGRESS_LOG <- file.path("data-raw", "build_progress.log")
+
+completed <- function() {
+    if (!file.exists(PROGRESS_LOG)) return(character(0))
+    unique(readLines(PROGRESS_LOG, warn = FALSE))
+}
+
+mark_complete <- function(name) {
+    cat(name, "\n", sep = "", file = PROGRESS_LOG, append = TRUE)
+}
+
+# Download, tidy, save and document one table, unless it is already done.
+build_table <- function(recipe, name, tx = FALSE) {
+    if (name %in% completed()) {
+        message("skipping ", name, " (already built)")
+        return(invisible(NULL))
+    }
+
+    df <- get_data(recipe) %>% tidy_data(recipe, tx = tx)
+    save_data(df, name = name)
+    document_annotable(recipe, name, type = if (tx) "tx2gene" else "gene")
+
+    mark_complete(name)
+    invisible(NULL)
+}
+
+# Drop the log only when nothing is left to do.
+clear_progress_if_done <- function(expected) {
+    if (all(expected %in% completed())) {
+        unlink(PROGRESS_LOG)
+        message("all tables built; removed ", PROGRESS_LOG)
+    } else {
+        missing <- setdiff(expected, completed())
+        message(length(missing), " table(s) still missing: ",
+                paste(missing, collapse = ", "))
+    }
+}
 ```
 
 ```{r load_recipes}
 recipe.files <- file.path("data-raw", "recipes") %>%
-    dir(full.names = TRUE)
+    dir(pattern = "\\.yml$", full.names = TRUE)
 names(recipe.files) <- sub(".yml", "", basename(recipe.files))
 recipes <- lapply(recipe.files, yaml.load_file)
 ```
 
-```{r gene_annotation_tables}
-# download gene tables
-genetables <- lapply(recipes, get_data)
-
-# tidy gene tables
-genetables <- Map(tidy_data, genetables, recipes, FALSE)
-
-# export data
-Map(save_data, genetables, name = names(genetables))
-
-# document
-Map(document_annotable, recipes, names(recipes), type = "gene")
+```{r gene_annotation_tables, cache=FALSE}
+# Each table is downloaded, saved and logged one at a time, so a failure part
+# way through keeps everything already finished.
+Map(build_table, recipes, names(recipes), tx = FALSE)
 ```
 
-```{r tx2gene}
-names(recipes) <- paste(names(recipes), "tx2gene", sep = "_")
-
-recipes <- lapply(recipes, function(x) {
+```{r tx2gene, cache=FALSE}
+# Kept in a separate variable rather than overwriting `recipes`, so this chunk
+# can be re-run on its own without leaving the gene recipes clobbered.
+tx_recipes <- lapply(recipes, function(x) {
     x$attributes <- c(
         enstxp = "ensembl_transcript_id",
         ensgene = "ensembl_gene_id")
     x
 })
+names(tx_recipes) <- paste(names(recipes), "tx2gene", sep = "_")
 
-# download tx2gene
-tx2gene <- lapply(recipes, get_data)
+Map(build_table, tx_recipes, names(tx_recipes), tx = TRUE)
 
-# tidy tx2gene
-tx2gene <- Map(tidy_data, tx2gene, recipes, TRUE)
-
-# export data
-Map(save_data, tx2gene, name = names(tx2gene))
-
-# document
-Map(document_annotable, recipes, names(recipes), type = "tx2gene")
+# Every gene and tx2gene table is now accounted for, so the progress log can go.
+clear_progress_if_done(c(names(recipes), names(tx_recipes)))
 ```
 
 ```{r ensembl_version}

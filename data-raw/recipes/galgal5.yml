@@ -1,6 +1,6 @@
 name: Chicken
 species: Gallus gallus
-host: https://useast.ensembl.org
+host: https://jun2026.archive.ensembl.org
 biomart: ENSEMBL_MART_ENSEMBL
 dataset: ggallus_gene_ensembl
 attributes:
