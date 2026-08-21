@@ -19,6 +19,11 @@ Useful links:
 \author{
 \strong{Maintainer}: Stephen Turner \email{vustephen@gmail.com}
 
+Authors:
+\itemize{
+  \item Stephen Turner \email{vustephen@gmail.com}
+}
+
 Other contributors:
 \itemize{
   \item Michael J. Steinbaugh \email{mike@steinbaugh.com} [contributor]
