@@ -19,8 +19,8 @@ Provides tables for converting and annotating Ensembl Gene IDs.
 ## Installation
 
 ```{r, eval=FALSE}
-install.packages("devtools")
-devtools::install_github("stephenturner/annotables")
+install.packages("pak")
+pak::pkg_install("stephenturner/annotables")
 ```
 
 ## Rationale
@@ -38,18 +38,18 @@ library(dplyr)
 # Assembly metadata for the assemblies these tables were built against.
 # Retrieved from rest.ensembl.org (info/assembly, info/species, info/genomes).
 meta <- tibble::tribble(
-    ~dataset,      ~species,    ~taxon, ~assembly,            ~accession,         ~released,
-    "grch38",      "Human",     9606L,  "GRCh38",             "GCA_000001405.29", "2013-12",
-    "grch37",      "Human",     9606L,  "GRCh37",             "GCA_000001405.14", "2009-02",
-    "grcm38",      "Mouse",     10090L, "GRCm38",             "GCA_000001635.8",  "2012-01",
-    "rnor6",       "Rat",       10116L, "Rnor_6.0",           "GCA_000001895.4",  "2014-07",
-    "galgal5",     "Chicken",   9031L,  "Gallus_gallus-5.0",  "GCA_000002315.3",  "2015-12",
-    "wbcel235",    "Worm",      6239L,  "WBcel235",           "GCA_000002985.3",  "2012-12",
-    "bdgp6",       "Fly",       7227L,  "BDGP6",              "GCA_000001215.4",  NA_character_,
-    "drerio",      "Zebrafish", 7955L,  "GRCz11",             "GCA_000002035.4",  "2017-05",
-    "mmul801",     "Macaque",   9544L,  "Mmul_8.0.1",         "GCA_000772875.3",  "2015-11",
-    "cfamiliaris", "Dog",       9615L,  "CanFam3.1",          "GCA_000002285.2",  "2011-11",
-    "sscrofa",     "Pig",       9823L,  "Sscrofa11.1",        "GCA_000003025.6",  "2017-02"
+    ~dataset,      ~species,    ~taxon, ~assembly,                     ~accession,         ~released,
+    "grch38",     "Human",     9606L,  "GRCh38",                      "GCA_000001405.29", "2013-12",
+    "grch37",     "Human",     9606L,  "GRCh37",                      "GCA_000001405.14", "2009-02",
+    "grcm39",     "Mouse",     10090L, "GRCm39",                      "GCA_000001635.9",  "2020-06",
+    "grcr8",      "Rat",       10116L, "GRCr8",                       "GCA_036323735.1",  "2024-01",
+    "grcg7b",     "Chicken",   9031L,  "bGalGal1.mat.broiler.GRCg7b", "GCA_016699485.1",  "2021-01",
+    "wbcel235",   "Worm",      6239L,  "WBcel235",                    "GCA_000002985.3",  "2012-12",
+    "bdgp654",    "Fly",       7227L,  "BDGP6.54",                    "GCA_000001215.4",  NA_character_,
+    "grcz11",     "Zebrafish", 7955L,  "GRCz11",                      "GCA_000002035.4",  "2017-05",
+    "mmul10",     "Macaque",   9544L,  "Mmul_10",                     "GCA_003339765.3",  "2019-02",
+    "roscfam1",   "Dog",       9615L,  "ROS_Cfam_1.0",                "GCA_014441545.1",  "2020-09",
+    "sscrofa111", "Pig",       9823L,  "Sscrofa11.1",                 "GCA_000003025.6",  "2017-02"
 )
 
 counts <- lapply(meta$dataset, function(n) {
@@ -80,9 +80,30 @@ meta %>%
 Coding versus non-coding is `biotype == "protein_coding"` against everything
 else; totals count gene rows, not unique symbols.
 
-Note several of these assemblies have been superseded upstream (Ensembl 116
-serves GRCm39, GRCr8, GRCg7b, ROS_Cfam_1.0 and Mmul_10). The dataset names
-encode the assembly they were built from — see `NEWS.md` for the full mapping.
+### Dataset names
+
+Datasets are named after the genome assembly. Recipes select by species, and
+BioMart always returns whatever assembly is current for that species, so a
+species-based name stops describing its own contents the moment Ensembl switches
+assembly — silently, with nothing failing. Naming after the assembly makes a
+stale name obvious.
+
+Eight datasets were renamed in 0.3.0 for this reason. The old names were
+removed, not deprecated, so existing code errors instead of quietly returning a
+different assembly:
+
+| Old name | New name | Species | Assembly |
+|---|---|---|---|
+| `rnor6` | `grcr8` | Rat | GRCr8 |
+| `grcm38` | `grcm39` | Mouse | GRCm39 |
+| `galgal5` | `grcg7b` | Chicken | bGalGal1.mat.broiler.GRCg7b |
+| `mmul801` | `mmul10` | Macaque | Mmul_10 |
+| `cfamiliaris` | `roscfam1` | Dog | ROS_Cfam_1.0 |
+| `bdgp6` | `bdgp654` | Fruitfly | BDGP6.54 |
+| `drerio` | `grcz11` | Zebrafish | GRCz11 |
+| `sscrofa` | `sscrofa111` | Pig | Sscrofa11.1 |
+
+`grch37`, `grch38` and `wbcel235` were already assembly-named and are unchanged.
 
 Where each table contains:
 
@@ -119,10 +140,10 @@ grch38_tx2gene
 Tables are saved in [tibble](http://tibble.tidyverse.org) format, pipe-able with [dplyr](http://dplyr.tidyverse.org):
 
 ```{r, results='asis'}
-grch38 %>% 
-    dplyr::filter(biotype == "protein_coding" & chr == "1") %>% 
-    dplyr::select(ensgene, symbol, chr, start, end, description) %>% 
-    head %>% 
+grch38 %>%
+    dplyr::filter(biotype == "protein_coding" & chr == "1") %>%
+    dplyr::select(ensgene, symbol, chr, start, end, description) %>%
+    head %>%
     knitr::kable(.)
 ```
 
@@ -151,10 +172,10 @@ head(res_tidy)
 ```
 
 ```{r, results='asis'}
-res_tidy %>% 
-    dplyr::arrange(p.adjusted) %>% 
-    head(20) %>% 
-    dplyr::inner_join(grch38, by = c("gene" = "ensgene")) %>% 
-    dplyr::select(gene, estimate, p.adjusted, symbol, description) %>% 
+res_tidy %>%
+    dplyr::arrange(p.adjusted) %>%
+    head(20) %>%
+    dplyr::inner_join(grch38, by = c("gene" = "ensgene")) %>%
+    dplyr::select(gene, estimate, p.adjusted, symbol, description) %>%
     knitr::kable(.)
 ```

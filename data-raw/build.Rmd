@@ -198,8 +198,12 @@ Map(build_table, tx_recipes, names(tx_recipes), tx = TRUE)
 clear_progress_if_done(c(names(recipes), names(tx_recipes)))
 ```
 
-```{r ensembl_version}
-ensembl_version <- listMarts() %>%
+```{r ensembl_version, cache=FALSE}
+# Ask the same host the tables came from. Bare listMarts() defaults to
+# www.ensembl.org, which is the host that 405s.
+ensembl_version <- with_retry(
+    listMarts(host = recipes[[1]]$host),
+    what = "listMarts") %>%
     filter(biomart == "ENSEMBL_MART_ENSEMBL") %>%
     pull(version)
 save_data(ensembl_version, name = "ensembl_version")

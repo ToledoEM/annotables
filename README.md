@@ -30,23 +30,29 @@ assemblies, accessions, release dates and taxonomy IDs come from the
 |:---|:---|---:|:---|:---|:---|---:|---:|---:|---:|
 | `grch38` | Human | 9606 | GRCh38 | GCA_000001405.29 | 2013-12 | 91,743 | 24,105 | 67,638 | 670,670 |
 | `grch37` | Human | 9606 | GRCh37 | GCA_000001405.14 | 2009-02 | 66,978 | 25,166 | 41,812 | 215,170 |
-| `grcm38` | Mouse | 10090 | GRCm38 | GCA_000001635.8 | 2012-01 | 78,718 | 22,087 | 56,631 | 481,956 |
-| `rnor6` | Rat | 10116 | Rnor_6.0 | GCA_000001895.4 | 2014-07 | 57,760 | 22,384 | 35,376 | 95,472 |
-| `galgal5` | Chicken | 9031 | Gallus_gallus-5.0 | GCA_000002315.3 | 2015-12 | 34,332 | 18,464 | 15,868 | 72,689 |
+| `grcm38` | Mouse | 10090 | GRCm39 | GCA_000001635.9 | 2020-06 | 78,718 | 22,087 | 56,631 | 481,956 |
+| `rnor6` | Rat | 10116 | GRCr8 | GCA_036323735.1 | 2024-01 | 57,760 | 22,384 | 35,376 | 95,472 |
+| `galgal5` | Chicken | 9031 | bGalGal1.mat.broiler.GRCg7b | GCA_016699485.1 | 2021-01 | 34,332 | 18,464 | 15,868 | 72,689 |
 | `wbcel235` | Worm | 6239 | WBcel235 | GCA_000002985.3 | 2012-12 | 46,926 | 19,985 | 26,941 | 60,000 |
-| `bdgp6` | Fly | 7227 | BDGP6 | GCA_000001215.4 | — | 28,759 | 18,484 | 10,275 | 41,600 |
+| `bdgp6` | Fly | 7227 | BDGP6.54 | GCA_000001215.4 | — | 28,759 | 18,484 | 10,275 | 41,600 |
 | `drerio` | Zebrafish | 7955 | GRCz11 | GCA_000002035.4 | 2017-05 | 92,137 | 34,779 | 57,358 | 65,905 |
-| `mmul801` | Macaque | 9544 | Mmul_8.0.1 | GCA_000772875.3 | 2015-11 | 37,169 | 22,236 | 14,933 | 64,228 |
-| `cfamiliaris` | Dog | 9615 | CanFam3.1 | GCA_000002285.2 | 2011-11 | 34,012 | 21,501 | 12,511 | 55,335 |
+| `mmul801` | Macaque | 9544 | Mmul_10 | GCA_003339765.3 | 2019-02 | 37,169 | 22,236 | 14,933 | 64,228 |
+| `cfamiliaris` | Dog | 9615 | ROS_Cfam_1.0 | GCA_014441545.1 | 2020-09 | 34,012 | 21,501 | 12,511 | 55,335 |
 | `sscrofa` | Pig | 9823 | Sscrofa11.1 | GCA_000003025.6 | 2017-02 | 35,819 | 22,150 | 13,669 | 60,440 |
 
 Coding versus non-coding is `biotype == "protein_coding"` against
 everything else; totals count gene rows, not unique symbols.
 
-Note several of these assemblies have been superseded upstream (Ensembl
-116 serves GRCm39, GRCr8, GRCg7b, ROS_Cfam_1.0 and Mmul_10). The dataset
-names encode the assembly they were built from — see `NEWS.md` for the
-full mapping.
+**Several dataset names no longer match the assembly they contain.**
+Recipes select by species, and BioMart returns whatever assembly is
+current for that species, so `rnor6` now holds GRCr8, `grcm38` holds
+GRCm39, and `galgal5`, `mmul801` and `cfamiliaris` likewise carry newer
+assemblies than their names suggest. Use the Assembly column above, not
+the dataset name, when coordinates matter.
+
+New datasets are named after the genome assembly rather than the
+species, so this cannot recur. Existing names are unchanged because
+renaming them would break existing code. See `NEWS.md`.
 
 Where each table contains:
 
